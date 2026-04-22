@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# Large data files
+data/cifar10_images/
+data/mnist_images/
+
+# Trained model files (large binaries)
+models/*.pkl
+
+# Results
+results/*.png
+results/*.jpg
+
+# OS
+.DS_Store
+Thumbs.db
