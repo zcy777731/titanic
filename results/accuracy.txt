@@ -1,0 +1,4 @@
+KNN CIFAR-10 Test Accuracy: 29.10%
+SVM CIFAR-10 Test Accuracy: 37.12%
+Logistic Regression MNIST Test Accuracy: 91.98%
+SVM MNIST Test Accuracy: 91.23%
