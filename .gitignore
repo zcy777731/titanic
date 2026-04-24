@@ -25,6 +25,7 @@ models/*.pkl
 # Results
 results/*.png
 results/*.jpg
+results/*.pkl
 
 # OS
 .DS_Store
