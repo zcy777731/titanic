@@ -29,3 +29,4 @@ results/*.jpg
 # OS
 .DS_Store
 Thumbs.db
+loss_curve.png

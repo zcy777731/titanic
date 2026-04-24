@@ -138,7 +138,7 @@ def plot_loss(loss_dict, save_path=None):
 
     if save_path is not None:
         plt.savefig(save_path, dpi=150, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
 
 def plot_prediction(y_true, y_pred, title="Prediction", save_path=None):
@@ -156,7 +156,7 @@ def plot_prediction(y_true, y_pred, title="Prediction", save_path=None):
 
     if save_path is not None:
         plt.savefig(save_path, dpi=150, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
 
 class LinearRegressionModel:
@@ -280,7 +280,7 @@ class LinearRegressionModel:
 
 
 def run_demo(
-    data_path="./house_data.csv",
+    data_path="../data/house/house_data.csv",
     method="least_squares",
     lr=0.01,
     epochs=1000,
@@ -330,7 +330,7 @@ def run_demo(
 if __name__ == "__main__":
     # 你可以在这里切换不同方法测试
     run_demo(
-        data_path="./house_data.csv",
+        data_path="../data/house/house_data.csv",
         method="mini_batch",   # least_squares / bgd / sgd / mini_batch
         lr=0.01,
         epochs=500,

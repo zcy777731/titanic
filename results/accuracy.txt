@@ -1,3 +1,5 @@
 SVM Titanic Test Accuracy: 83.80%
 Logistic Regression MNIST Test Accuracy: 91.98%
 SVM Titanic Test Accuracy: 83.80%
+SVM Titanic Test Accuracy: 83.80%
+SVM Titanic Test Accuracy: 83.80%
