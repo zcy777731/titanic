@@ -13,8 +13,9 @@ def run_script(script_name, description):
     print("\n" + "=" * 60)
     print(f"Running: {description}")
     print("=" * 60)
-    script_path = os.path.join(os.path.dirname(__file__), "src", script_name)
-    result = subprocess.run([sys.executable, script_path], cwd=os.path.dirname(__file__))
+    src_dir = os.path.join(os.path.dirname(__file__), "src")
+    script_path = os.path.join(src_dir, script_name)
+    result = subprocess.run([sys.executable, script_path], cwd=src_dir)
     if result.returncode != 0:
         print(f"  [FAILED] {script_name} exited with code {result.returncode}")
     else:

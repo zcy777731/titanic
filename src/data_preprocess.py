@@ -29,7 +29,7 @@ def preprocess_titanic(train_df, test_df):
     # 类别型特征编码
     category_cols = []
     for col in train_df.columns:
-        if col != target_col and train_df[col].dtype == "object":
+        if col != target_col and pd.api.types.is_string_dtype(train_df[col]):
             category_cols.append(col)
 
     # 拼接后统一做编码，保证 train/test 一致
@@ -40,7 +40,7 @@ def preprocess_titanic(train_df, test_df):
 
     # 缺失值填补
     for col in combined.columns:
-        if combined[col].dtype == "object":
+        if pd.api.types.is_string_dtype(combined[col]) or pd.api.types.is_object_dtype(combined[col]):
             mode_val = combined[col].mode()[0]
             combined[col] = combined[col].fillna(mode_val)
         else:
