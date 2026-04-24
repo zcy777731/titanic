@@ -1,12 +1,18 @@
 """
 Machine Learning Project - Main Entry
-Covers: Titanic, House Price, MNIST, CIFAR-10
-Models: Linear Regression, Logistic Regression, SVM, KNN
+Usage:
+  python main.py --algo=svm --data=titanic --process=train
+  python main.py --algo=logistic --data=mnist --process=train
+  python main.py --algo=knn --data=cifar10 --process=train
+  python main.py --algo=linear --data=house --process=train
+  python main.py --algo=all --data=all --process=all
+  python main.py --help
 """
 
 import subprocess
 import sys
 import os
+import argparse
 
 
 def run_script(script_name, description):
@@ -30,61 +36,103 @@ def show_results():
         print("All Results Summary")
         print("=" * 60)
         with open(result_path, "r", encoding="utf-8") as f:
-            print(f.read())
+            content = f.read()
+        print(content)
     else:
         print("\nNo results found. Run some models first.")
 
 
-if __name__ == "__main__":
+ALGO_DATA_MAP = {
+    ("svm", "titanic"): {
+        "SVM Titanic Train": "train.py",
+        "SVM Titanic Test": "test.py",
+    },
+    ("logistic", "titanic"): {
+        "Titanic Logistic Regression": "logistic_regression.py",
+    },
+    ("linear", "house"): {
+        "House Price Linear Regression": "linear_regression.py",
+    },
+    ("logistic", "mnist"): {
+        "MNIST Logistic Regression": "logistic_mnist.py",
+    },
+    ("svm", "mnist"): {
+        "MNIST SVM": "svm_mnist.py",
+    },
+    ("knn", "cifar10"): {
+        "CIFAR-10 KNN": "KNN.py",
+    },
+    ("svm", "cifar10"): {
+        "CIFAR-10 SVM": "SVM.py",
+    },
+}
+
+
+def run_single(algo, data, process):
+    key = (algo, data)
+    if key not in ALGO_DATA_MAP:
+        print(f"Error: unsupported combination --algo={algo} --data={data}")
+        print("Use --help to see available options.")
+        return
+
+    scripts = ALGO_DATA_MAP[key]
+    for desc, script in scripts.items():
+        if process == "all" or process == "train":
+            run_script(script, desc)
+            break
+        elif process == "test" and "test" in script:
+            run_script(script, desc)
+            break
+
+
+def run_all():
+    print("\nRunning ALL models (this may take a while)...")
+    all_entries = [
+        ("SVM Titanic Train", "train.py"),
+        ("SVM Titanic Test", "test.py"),
+        ("Titanic Logistic Regression", "logistic_regression.py"),
+        ("MNIST Logistic Regression", "logistic_mnist.py"),
+        ("MNIST SVM", "svm_mnist.py"),
+        ("CIFAR-10 KNN", "KNN.py"),
+        ("CIFAR-10 SVM", "SVM.py"),
+    ]
+    for desc, script in all_entries:
+        run_script(script, desc)
+    show_results()
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Machine Learning Project",
+        epilog="Examples:\n"
+               "  python main.py --algo=svm --data=titanic --process=train\n"
+               "  python main.py --algo=logistic --data=mnist --process=train\n"
+               "  python main.py --algo=knn --data=cifar10 --process=train\n"
+               "  python main.py --algo=all --data=all --process=all",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("--algo", type=str, default="all",
+                        help="Algorithm: svm, logistic, linear, knn, all")
+    parser.add_argument("--data", type=str, default="all",
+                        help="Dataset: titanic, house, mnist, cifar10, all")
+    parser.add_argument("--process", type=str, default="all",
+                        help="Process: train, test, all")
+
+    args = parser.parse_args()
+
     print("=" * 60)
     print("Machine Learning Project")
     print("=" * 60)
-    print("\nAvailable models:")
-    print("  1. Titanic - SVM")
-    print("  2. Titanic - Logistic Regression")
-    print("  3. House Price - Linear Regression")
-    print("  4. MNIST - Logistic Regression")
-    print("  5. MNIST - SVM")
-    print("  6. CIFAR-10 - KNN")
-    print("  7. CIFAR-10 - SVM")
-    print("  8. Run ALL models")
-    print("  9. Show saved results")
-    print("  0. Exit")
+    print(f"Algorithm: {args.algo}")
+    print(f"Dataset:   {args.data}")
+    print(f"Process:   {args.process}")
+    print("=" * 60)
 
-    while True:
-        try:
-            choice = input("\nSelect model to run (0-9): ").strip()
-        except (EOFError, KeyboardInterrupt):
-            break
+    if args.algo == "all" or args.data == "all":
+        run_all()
+    else:
+        run_single(args.algo, args.data, args.process)
 
-        if choice == "0":
-            break
-        elif choice == "1":
-            run_script("train.py", "Titanic SVM Train")
-            run_script("test.py", "Titanic SVM Test")
-        elif choice == "2":
-            run_script("logistic_regression.py", "Titanic Logistic Regression")
-        elif choice == "3":
-            run_script("linear_regression.py", "House Price Linear Regression")
-        elif choice == "4":
-            run_script("logistic_mnist.py", "MNIST Logistic Regression")
-        elif choice == "5":
-            run_script("svm_mnist.py", "MNIST SVM")
-        elif choice == "6":
-            run_script("KNN.py", "CIFAR-10 KNN")
-        elif choice == "7":
-            run_script("SVM.py", "CIFAR-10 SVM")
-        elif choice == "8":
-            print("\nRunning ALL models (this may take a while)...")
-            run_script("train.py", "Titanic SVM Train")
-            run_script("test.py", "Titanic SVM Test")
-            run_script("logistic_regression.py", "Titanic Logistic Regression")
-            run_script("logistic_mnist.py", "MNIST Logistic Regression")
-            run_script("svm_mnist.py", "MNIST SVM")
-            run_script("KNN.py", "CIFAR-10 KNN")
-            run_script("SVM.py", "CIFAR-10 SVM")
-            show_results()
-        elif choice == "9":
-            show_results()
-        else:
-            print("Invalid choice. Please enter 0-9.")
+
+if __name__ == "__main__":
+    main()
