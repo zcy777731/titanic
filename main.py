@@ -65,6 +65,17 @@ ALGO_DATA_MAP = {
     ("svm", "cifar10"): {
         "CIFAR-10 SVM": "SVM.py",
     },
+    ("ann", "house"): {
+        "ANN House Price Regression": "ann_house.py",
+    },
+    ("ann", "titanic"): {
+        "ANN Titanic Train": "ann_titanic_train.py",
+        "ANN Titanic Test": "ann_titanic_test.py",
+    },
+    ("ann", "cifar10"): {
+        "ANN CIFAR-10 Train": "ann_cifar10_train.py",
+        "ANN CIFAR-10 Test": "ann_cifar10_test.py",
+    },
 }
 
 
@@ -76,13 +87,17 @@ def run_single(algo, data, process):
         return
 
     scripts = ALGO_DATA_MAP[key]
-    for desc, script in scripts.items():
-        if process == "all" or process == "train":
+    if process == "all":
+        for desc, script in scripts.items():
             run_script(script, desc)
-            break
-        elif process == "test" and "test" in script:
-            run_script(script, desc)
-            break
+    elif process == "train":
+        for desc, script in scripts.items():
+            if "train" in desc.lower() or "test" not in desc.lower():
+                run_script(script, desc)
+    elif process == "test":
+        for desc, script in scripts.items():
+            if "test" in desc.lower():
+                run_script(script, desc)
 
 
 def run_all():
@@ -95,6 +110,10 @@ def run_all():
         ("MNIST SVM", "svm_mnist.py"),
         ("CIFAR-10 KNN", "KNN.py"),
         ("CIFAR-10 SVM", "SVM.py"),
+        ("ANN Titanic Train", "ann_titanic_train.py"),
+        ("ANN Titanic Test", "ann_titanic_test.py"),
+        ("ANN CIFAR-10 Train", "ann_cifar10_train.py"),
+        ("ANN CIFAR-10 Test", "ann_cifar10_test.py"),
     ]
     for desc, script in all_entries:
         run_script(script, desc)
@@ -108,11 +127,14 @@ def main():
                "  python main.py --algo=svm --data=titanic --process=train\n"
                "  python main.py --algo=logistic --data=mnist --process=train\n"
                "  python main.py --algo=knn --data=cifar10 --process=train\n"
+               "  python main.py --algo=ann --data=house --process=train\n"
+               "  python main.py --algo=ann --data=titanic --process=train\n"
+               "  python main.py --algo=ann --data=cifar10 --process=test\n"
                "  python main.py --algo=all --data=all --process=all",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--algo", type=str, default="all",
-                        help="Algorithm: svm, logistic, linear, knn, all")
+                        help="Algorithm: svm, logistic, linear, knn, ann, all")
     parser.add_argument("--data", type=str, default="all",
                         help="Dataset: titanic, house, mnist, cifar10, all")
     parser.add_argument("--process", type=str, default="all",

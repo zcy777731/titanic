@@ -1,95 +1,178 @@
-# Machine Learning Project
+<p align="center">
+  <h1 align="center">🤖 Machine Learning Project</h1>
+  <p align="center">
+    A comprehensive ML project covering <strong>Classification</strong>, <strong>Regression</strong>,
+    and <strong>Deep Learning</strong> across 4 datasets.
+  </p>
+</p>
 
-Machine learning classification and regression project using four datasets: **Titanic**, **House Prices**, **MNIST**, and **CIFAR-10**.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.12-blue?logo=python">
+  <img src="https://img.shields.io/badge/scikit--learn-1.8-orange?logo=scikitlearn">
+  <img src="https://img.shields.io/badge/MNIST-91.98%25-brightgreen">
+  <img src="https://img.shields.io/badge/CIFAR--10-37.37%25-yellow">
+</p>
 
-## Project Structure
+---
+
+## 📋 Table of Contents
+
+- [Datasets](#-datasets)
+- [Models & Results](#-models--results)
+- [Project Structure](#-project-structure)
+- [Quick Start](#-quick-start)
+- [Usage Examples](#-usage-examples)
+- [Loss Curves](#-loss-curves)
+
+---
+
+## 📊 Datasets
+
+| Dataset | Description | Type | Samples | Features | Classes |
+|---------|-------------|------|---------|----------|---------|
+| [Titanic](https://www.kaggle.com/c/titanic) | Passenger survival prediction | Classification | 891 | Age, Sex, Fare, Embarked... | 2 |
+| [House Prices](data/house/) | House price regression | Regression | 1000 | x1, x2, x3, x4 | — |
+| [MNIST](http://yann.lecun.com/exdb/mnist/) | Handwritten digit recognition | Classification | 60,000 | 28×28 grayscale pixels (784) | 10 |
+| [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) | Object recognition | Classification | 60,000 | 32×32 RGB pixels (3072) | 10 |
+
+---
+
+## 🧠 Models & Results
+
+### Classical ML Models
+
+| Model | Dataset | Algorithm | Accuracy |
+|-------|---------|-----------|:--------:|
+| SVM | Titanic | SVC (RBF kernel) | **83.80%** |
+| Logistic Regression | Titanic | sklearn + Manual (mini-batch GD) | **79.89%** |
+| Linear Regression | House | Least Squares / BGD / SGD / Mini-batch | RMSE **0.495** |
+| Logistic Regression | MNIST | Softmax Multinomial | **91.98%** |
+| SVM | MNIST | LinearSVC + PCA | **91.23%** |
+| KNN | CIFAR-10 | KNeighbors (k=5) | **29.10%** |
+| SVM | CIFAR-10 | LinearSVC + PCA | **37.12%** |
+
+### ANN Models (This Assignment)
+
+| Model | Dataset | Architecture | Accuracy / Metric |
+|-------|---------|:------------:|:-----------------:|
+| ANN | Titanic | MLP (64, 32) | **83.24%** |
+| ANN | House | MLPRegressor (64, 32) | MSE **0.255** |
+| ANN | CIFAR-10 | MLP (128, 64) + PCA | **37.37%** |
+
+---
+
+## 📁 Project Structure
 
 ```
 ML_Project/
-├── main.py                  # Entry point - menu to run all models
-├── requirements.txt         # Python dependencies
+├── main.py                     # CLI entry point
+├── requirements.txt
+├── .gitignore
 ├── README.md
 ├── data/
-│   ├── titanic/             # Titanic survival dataset (CSV)
-│   ├── house/               # House price dataset (CSV)
-│   ├── mnist_images/        # MNIST handwritten digits (PNG, 28x28)
-│   └── cifar10_images/      # CIFAR-10 color images (PNG, 32x32)
+│   ├── titanic/                # Titanic CSV data
+│   ├── house/                  # House price CSV data
+│   ├── mnist_images/           # MNIST handwritten digits
+│   └── cifar10_images/         # CIFAR-10 object images
 ├── src/
-│   ├── data.preprocess.py   # Titanic data preprocessing
-│   ├── train.py             # Titanic SVM training
-│   ├── test.py              # Titanic SVM testing
-│   ├── logistic_regression.py  # Titanic Logistic Regression
-│   ├── linear_regression.py    # House Price Linear Regression
-│   ├── logistic_mnist.py       # MNIST Logistic Regression
-│   ├── svm_mnist.py            # MNIST SVM
-│   ├── KNN.py                  # CIFAR-10 KNN
-│   └── SVM.py                  # CIFAR-10 SVM
-├── models/                  # Saved trained models (.pkl)
-└── results/                 # Accuracy results and figures
+│   ├── classical/
+│   │   ├── train.py / test.py          # Titanic SVM
+│   │   ├── logistic_regression.py      # Titanic Logistic Regression
+│   │   ├── linear_regression.py        # House Price Linear Regression
+│   │   ├── logistic_mnist.py           # MNIST Logistic Regression
+│   │   ├── svm_mnist.py                # MNIST SVM
+│   │   ├── KNN.py / SVM.py             # CIFAR-10
+│   │   └── data_preprocess.py          # Titanic preprocessing
+│   └── ann/
+│       ├── ann_house.py                # ANN House Regression
+│       ├── ann_titanic_train.py         # ANN Titanic Training
+│       ├── ann_titanic_test.py          # ANN Titanic Testing
+│       ├── ann_cifar10_train.py         # ANN CIFAR-10 Training
+│       └── ann_cifar10_test.py          # ANN CIFAR-10 Testing
+├── models/                     # Saved trained models (.pkl)
+└── results/                    # Accuracy logs & loss curve plots
 ```
 
-## Datasets
+> **Note:** Large image datasets (`mnist_images/`, `cifar10_images/`) and model files (`*.pkl`) are excluded from git via `.gitignore`.
 
-| Dataset | Description | Features | Classes |
-|---------|-------------|----------|---------|
-| Titanic | Passenger survival prediction | Age, Sex, Fare, Embarked, etc. | 2 (Survived/Not) |
-| House | House price prediction | x1, x2, x3, x4 | Regression |
-| MNIST | Handwritten digit recognition | 28x28 grayscale pixels (784) | 10 (0-9) |
-| CIFAR-10 | Object recognition | 32x32 RGB pixels (3072) | 10 classes |
+---
 
-## Models Implemented
-
-| Model | Dataset | Algorithm |
-|-------|---------|-----------|
-| SVM | Titanic | SVC (RBF kernel) |
-| Logistic Regression | Titanic | sklearn + manual (mini-batch GD) |
-| Linear Regression | House | Least squares / BGD / SGD / Mini-batch |
-| Logistic Regression | MNIST | Softmax (multinomial) |
-| SVM | MNIST | LinearSVC + PCA |
-| KNN | CIFAR-10 | KNeighborsClassifier (k=5) |
-| SVM | CIFAR-10 | LinearSVC + PCA |
-
-## How to Run
-
-### Install dependencies
+## 🚀 Quick Start
 
 ```bash
+# 1. Clone
+git clone https://github.com/zcy777731/titanic.git
+cd titanic
+
+# 2. Install dependencies
 pip install -r requirements.txt
+
+# 3. Run a model
+python main.py --algo=ann --data=titanic --process=train
 ```
 
-### Run via main menu
+---
+
+## 🎮 Usage Examples
+
+### ANN Models
 
 ```bash
-python main.py
+# House Price Regression
+python main.py --algo=ann --data=house --process=train
+
+# Titanic (train then test)
+python main.py --algo=ann --data=titanic --process=train
+python main.py --algo=ann --data=titanic --process=test
+
+# CIFAR-10 (train then test)
+python main.py --algo=ann --data=cifar10 --process=train
+python main.py --algo=ann --data=cifar10 --process=test
 ```
 
-Select a model number from the menu to train and evaluate.
-
-### Run individual scripts
+### Classical Models
 
 ```bash
-# Titanic
-python src/train.py
-python src/test.py
-python src/logistic_regression.py
+# SVM Titanic
+python main.py --algo=svm --data=titanic --process=train
 
-# House Price
-python src/linear_regression.py
+# Logistic Regression MNIST
+python main.py --algo=logistic --data=mnist --process=train
 
-# MNIST
-python src/logistic_mnist.py
-python src/svm_mnist.py
-
-# CIFAR-10
-python src/KNN.py
-python src/SVM.py
+# KNN / SVM CIFAR-10
+python main.py --algo=knn --data=cifar10 --process=train
+python main.py --algo=svm --data=cifar10 --process=train
 ```
 
-## Results
+### Run Everything
 
-| Model | Dataset | Test Accuracy |
-|-------|---------|---------------|
-| Logistic Regression | MNIST | 91.98% |
-| SVM | MNIST | 91.23% |
-| SVM | CIFAR-10 | 37.12% |
-| KNN | CIFAR-10 | 29.10% |
+```bash
+python main.py --algo=all --data=all --process=all
+```
+
+---
+
+## 📈 Loss Curves
+
+| Model | Loss Curve |
+|-------|:----------:|
+| ANN Titanic | ![Titanic Loss](results/ann_titanic_loss.png) |
+| ANN House | ![House Loss](results/ann_house_loss.png) |
+| ANN CIFAR-10 | ![CIFAR-10 Loss](results/ann_cifar10_loss.png) |
+
+---
+
+## 🛠️ Tech Stack
+
+- **Python 3.12** — Core language
+- **scikit-learn 1.8** — ML models (SVM, KNN, Logistic Regression, MLP, PCA)
+- **Pandas** — Data preprocessing
+- **NumPy** — Numerical computing
+- **Matplotlib** — Visualization & loss curves
+- **Pillow** — Image loading
+
+---
+
+<p align="center">
+  <i>Course Project — ML Models Implementation & Comparison</i>
+</p>
