@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -8,6 +9,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 import warnings
 warnings.filterwarnings('ignore')
+
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # =========================
 # 1. Load data

@@ -6,6 +6,7 @@ from PIL import Image
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 def load_mnist(data_dir, train_ratio=5/6):

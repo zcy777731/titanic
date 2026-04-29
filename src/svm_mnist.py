@@ -8,6 +8,7 @@ from sklearn.svm import LinearSVC
 from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 def load_mnist(data_dir, train_ratio=5/6):

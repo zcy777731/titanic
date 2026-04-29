@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 def load_data(path):

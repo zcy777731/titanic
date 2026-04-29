@@ -4,6 +4,8 @@ import pandas as pd
 from sklearn.svm import SVC
 from data_preprocess import preprocess_titanic
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 print("=" * 50)
 print("SVM Titanic Train")
 print("=" * 50)

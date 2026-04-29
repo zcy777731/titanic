@@ -6,6 +6,7 @@ from PIL import Image
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 def load_cifar10(data_dir):

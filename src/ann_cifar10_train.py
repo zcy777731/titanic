@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 def load_cifar10(data_dir):

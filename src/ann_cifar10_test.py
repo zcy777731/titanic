@@ -11,6 +11,7 @@ from PIL import Image
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 def load_cifar10(data_dir):
