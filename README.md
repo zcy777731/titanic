@@ -198,6 +198,50 @@ python main.py --data=drybean --process=list
 
 ---
 
+## 🏆 额外对比维度（加分项）
+
+在评分要求的5项对比之外，增加了4个额外维度：
+
+### ① 模型大小与复杂度
+
+![model_size](tmp_imgs/extra_model_size.png)
+
+| 算法 | 文件大小 | 参数量 | 特点 |
+|------|---------|--------|------|
+| Logistic Regression | ~10KB | 160 | ✅ 最轻量 |
+| SVM (RBF) | ~300KB | ~2000向量 | ⚠️ 存储支持向量 |
+| KNN (k=5) | ~80KB | 2000样本 | ⚠️ 存储全部数据 |
+| XGBoost | ~1.5MB | 数万节点 | 📦 集成模型最大 |
+
+### ② 数据量敏感性
+
+![data_sensitivity](tmp_imgs/extra_data_sensitivity.png)
+
+只用 **10% 训练数据**（~950条）就能达到 **91%+ 准确率**，
+说明干豆数据集的特征质量高、区分度好。
+
+### ③ 训练时间对比
+
+![training_time](tmp_imgs/extra_training_time.png)
+
+| 算法 | 耗时 | 评级 |
+|------|------|------|
+| KNN (k=5) | 0.02s | 🚀 最快（无需训练） |
+| Logistic Regression | 0.17s | ✅ 快速 |
+| XGBoost | 1.55s | ⚡ 中等 |
+| SVM (RBF) | 2.08s | 🐢 最慢 |
+
+### ④ 可解释性分析
+
+![interpretability](tmp_imgs/extra_interpretability.png)
+
+LR和RF在Top-8特征中**有4个重合**，说明重要特征具有跨模型一致性：
+- **AspectRation**（长宽比）→ 两个模型都认为最重要
+- **ShapeFactor4** → 形状因子具强判别力
+- **Roundness / Eccentricity** → 圆度和离心率稳定重要
+
+---
+
 ## 🛠 依赖
 
 ```bash
