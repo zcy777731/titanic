@@ -34,6 +34,7 @@
 | [House Prices](data/house/) | House price regression | Regression | 1000 | x1, x2, x3, x4 | — |
 | [MNIST](http://yann.lecun.com/exdb/mnist/) | Handwritten digit recognition | Classification | 60,000 | 28×28 grayscale pixels (784) | 10 |
 | [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) | Object recognition | Classification | 60,000 | 32×32 RGB pixels (3072) | 10 |
+| [Dry Bean](https://www.muratkoklu.com/datasets/) | Dry bean classification | Classification | 13,611 | 16 shape features (Area, Perimeter, etc.) | 7 |
 
 ---
 
@@ -50,6 +51,10 @@
 | SVM | MNIST | LinearSVC + PCA | **91.23%** |
 | KNN | CIFAR-10 | KNeighbors (k=5) | **29.10%** |
 | SVM | CIFAR-10 | LinearSVC + PCA | **37.12%** |
+| Logistic Regression | Dry Bean | L2 Multinomial | **91.85%** |
+| SVM (RBF) | Dry Bean | RBF kernel | **92.88%** |
+| KNN | Dry Bean | k=5, kd_tree | **91.74%** |
+| XGBoost ⭐ | Dry Bean | n_estimators=200 | **92.58%** |
 
 ### ANN Models (This Assignment)
 
@@ -74,6 +79,13 @@ ML_Project/
 │   ├── house/                  # House price CSV data
 │   ├── mnist_images/           # MNIST handwritten digits
 │   └── cifar10_images/         # CIFAR-10 object images
+├── DryBeanDataset/              # Dry Bean dataset
+│   ├── Dry_Bean_Dataset_Dirty_train.csv  # Raw train
+│   ├── Dry_Bean_Dataset_Dirty_val.csv    # Raw val
+│   ├── Dry_Bean_Dataset_Dirty_test.csv   # Raw test
+│   ├── train_clean.csv                   # Cleaned train
+│   ├── val_clean.csv                     # Cleaned val
+│   └── test_clean.csv                    # Cleaned test
 ├── src/
 │   ├── classical/
 │   │   ├── train.py / test.py          # Titanic SVM
@@ -89,6 +101,9 @@ ML_Project/
 │       ├── ann_titanic_test.py          # ANN Titanic Testing
 │       ├── ann_cifar10_train.py         # ANN CIFAR-10 Training
 │       └── ann_cifar10_test.py          # ANN CIFAR-10 Testing
+│   ├── drybean_analysis.py              # DryBean: Data analysis
+│   ├── drybean_preprocessing.py         # DryBean: Data cleaning
+│   └── drybean_experiments.py           # DryBean: Experiments
 ├── models/                     # Saved trained models (.pkl)
 └── results/                    # Accuracy logs & loss curve plots
 ```
@@ -142,6 +157,20 @@ python main.py --algo=logistic --data=mnist --process=train
 # KNN / SVM CIFAR-10
 python main.py --algo=knn --data=cifar10 --process=train
 python main.py --algo=svm --data=cifar10 --process=train
+```
+
+### Dry Bean Classification
+
+```bash
+# Data analysis
+python main.py --algo=drybean --data=drybean --process=analyze
+# Data preprocessing
+python main.py --algo=drybean --data=drybean --process=preprocess
+# Run experiments (LR + SVM + KNN + XGBoost)
+python main.py --algo=drybean --data=drybean --process=experiments
+# Train single model
+python main.py --algo=lr --data=drybean --process=train
+python main.py --algo=xgb --data=drybean --process=train
 ```
 
 ### Run Everything

@@ -1,160 +1,90 @@
 """
 Machine Learning Project - Main Entry
+期末作业: Dry Bean Dataset 全流程
 Usage:
-  python main.py --algo=svm --data=titanic --process=train
-  python main.py --algo=logistic --data=mnist --process=train
-  python main.py --algo=knn --data=cifar10 --process=train
-  python main.py --algo=linear --data=house --process=train
+  python main.py --algo=drybean --data=drybean --process=analyze
+  python main.py --algo=drybean --data=drybean --process=preprocess
+  python main.py --algo=drybean --data=drybean --process=experiments
+  python main.py --algo=lr --data=drybean --process=train
+  python main.py --algo=svm --data=drybean --process=train
+  python main.py --algo=knn --data=drybean --process=train
+  python main.py --algo=xgb --data=drybean --process=train
   python main.py --algo=all --data=all --process=all
-  python main.py --help
 """
+import subprocess, sys, os, argparse
 
-import subprocess
-import sys
-import os
-import argparse
-
-
-def run_script(script_name, description):
-    print("\n" + "=" * 60)
-    print(f"Running: {description}")
-    print("=" * 60)
-    src_dir = os.path.join(os.path.dirname(__file__), "src")
-    script_path = os.path.join(src_dir, script_name)
-    result = subprocess.run([sys.executable, script_path], cwd=src_dir)
-    if result.returncode != 0:
-        print(f"  [FAILED] {script_name} exited with code {result.returncode}")
-    else:
+def run_script(script_name, description, cwd=None):
+    print(f">>> {description}...")
+    src = os.path.join(os.path.dirname(__file__), "src")
+    path = os.path.join(src, script_name)
+    if cwd is None:
+        cwd = os.path.dirname(__file__)
+    result = subprocess.run([sys.executable, path], cwd=cwd)
+    if result.returncode == 0:
         print(f"  [DONE] {description}")
     return result.returncode
 
-
-def show_results():
-    result_path = os.path.join(os.path.dirname(__file__), "results", "accuracy.txt")
-    if os.path.exists(result_path):
-        print("\n" + "=" * 60)
-        print("All Results Summary")
-        print("=" * 60)
-        with open(result_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        print(content)
-    else:
-        print("\nNo results found. Run some models first.")
-
-
-ALGO_DATA_MAP = {
-    ("svm", "titanic"): {
-        "SVM Titanic Train": "train.py",
-        "SVM Titanic Test": "test.py",
-    },
-    ("logistic", "titanic"): {
-        "Titanic Logistic Regression": "logistic_regression.py",
-    },
-    ("linear", "house"): {
-        "House Price Linear Regression": "linear_regression.py",
-    },
-    ("logistic", "mnist"): {
-        "MNIST Logistic Regression": "logistic_mnist.py",
-    },
-    ("svm", "mnist"): {
-        "MNIST SVM": "svm_mnist.py",
-    },
-    ("knn", "cifar10"): {
-        "CIFAR-10 KNN": "KNN.py",
-    },
-    ("svm", "cifar10"): {
-        "CIFAR-10 SVM": "SVM.py",
-    },
-    ("ann", "house"): {
-        "ANN House Price Regression": "ann_house.py",
-    },
-    ("ann", "titanic"): {
-        "ANN Titanic Train": "ann_titanic_train.py",
-        "ANN Titanic Test": "ann_titanic_test.py",
-    },
-    ("ann", "cifar10"): {
-        "ANN CIFAR-10 Train": "ann_cifar10_train.py",
-        "ANN CIFAR-10 Test": "ann_cifar10_test.py",
-    },
-}
-
-
-def run_single(algo, data, process):
-    key = (algo, data)
-    if key not in ALGO_DATA_MAP:
-        print(f"Error: unsupported combination --algo={algo} --data={data}")
-        print("Use --help to see available options.")
-        return
-
-    scripts = ALGO_DATA_MAP[key]
-    if process == "all":
-        for desc, script in scripts.items():
+def run_drybean(process):
+    scripts = {
+        'analyze': ('drybean_analysis.py', 'Data Analysis'),
+        'preprocess': ('drybean_preprocessing.py', 'Data Preprocessing'),
+        'experiments': ('drybean_experiments.py', 'Experiments'),
+        'train': ('drybean_experiments.py', 'All Experiments'),
+    }
+    if process in scripts:
+        run_script(*scripts[process])
+    elif process == 'all':
+        for script, desc in scripts.values():
             run_script(script, desc)
-    elif process == "train":
-        for desc, script in scripts.items():
-            if "train" in desc.lower() or "test" not in desc.lower():
-                run_script(script, desc)
-    elif process == "test":
-        for desc, script in scripts.items():
-            if "test" in desc.lower():
-                run_script(script, desc)
 
+def run_drybean_single(algo):
+    import pandas as pd, time
+    from sklearn.preprocessing import LabelEncoder
+    from sklearn.metrics import accuracy_score
 
-def run_all():
-    print("\nRunning ALL models (this may take a while)...")
-    all_entries = [
-        ("SVM Titanic Train", "train.py"),
-        ("SVM Titanic Test", "test.py"),
-        ("Titanic Logistic Regression", "logistic_regression.py"),
-        ("MNIST Logistic Regression", "logistic_mnist.py"),
-        ("MNIST SVM", "svm_mnist.py"),
-        ("CIFAR-10 KNN", "KNN.py"),
-        ("CIFAR-10 SVM", "SVM.py"),
-        ("ANN Titanic Train", "ann_titanic_train.py"),
-        ("ANN Titanic Test", "ann_titanic_test.py"),
-        ("ANN CIFAR-10 Train", "ann_cifar10_train.py"),
-        ("ANN CIFAR-10 Test", "ann_cifar10_test.py"),
-    ]
-    for desc, script in all_entries:
-        run_script(script, desc)
-    show_results()
+    train = pd.read_csv('DryBeanDataset/train_clean.csv')
+    test = pd.read_csv('DryBeanDataset/test_clean.csv')
+    feat = [c for c in train.columns if c != 'Class']
+    le = LabelEncoder()
+    X_tr, y_tr = train[feat].values, le.fit_transform(train['Class'])
+    X_te, y_te = test[feat].values, le.transform(test['Class'])
 
+    if algo == 'lr':
+        from sklearn.linear_model import LogisticRegression
+        m = LogisticRegression(max_iter=1000, random_state=42)
+    elif algo == 'svm':
+        from sklearn.svm import SVC
+        m = SVC(kernel='rbf', gamma='scale', random_state=42)
+    elif algo == 'knn':
+        from sklearn.neighbors import KNeighborsClassifier
+        m = KNeighborsClassifier(n_neighbors=5)
+    elif algo == 'xgb':
+        from xgboost import XGBClassifier
+        m = XGBClassifier(n_estimators=200, random_state=42, verbosity=0)
+    else:
+        print(f"Unknown algo: {algo}"); return
+
+    t0 = time.time()
+    m.fit(X_tr, y_tr)
+    acc = accuracy_score(y_te, m.predict(X_te))
+    print(f"{algo}: test acc={acc*100:.2f}%  train_t={time.time()-t0:.1f}s")
+    import joblib; joblib.dump(m, f'models/drybean_{algo}.pkl')
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Machine Learning Project",
-        epilog="Examples:\n"
-               "  python main.py --algo=svm --data=titanic --process=train\n"
-               "  python main.py --algo=logistic --data=mnist --process=train\n"
-               "  python main.py --algo=knn --data=cifar10 --process=train\n"
-               "  python main.py --algo=ann --data=house --process=train\n"
-               "  python main.py --algo=ann --data=titanic --process=train\n"
-               "  python main.py --algo=ann --data=cifar10 --process=test\n"
-               "  python main.py --algo=all --data=all --process=all",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument("--algo", type=str, default="all",
-                        help="Algorithm: svm, logistic, linear, knn, ann, all")
-    parser.add_argument("--data", type=str, default="all",
-                        help="Dataset: titanic, house, mnist, cifar10, all")
-    parser.add_argument("--process", type=str, default="all",
-                        help="Process: train, test, all")
-
+    parser = argparse.ArgumentParser(description="ML Project")
+    parser.add_argument("--algo", type=str, default="all")
+    parser.add_argument("--data", type=str, default="all")
+    parser.add_argument("--process", type=str, default="all")
     args = parser.parse_args()
 
-    print("=" * 60)
-    print("Machine Learning Project")
-    print("=" * 60)
-    print(f"Algorithm: {args.algo}")
-    print(f"Dataset:   {args.data}")
-    print(f"Process:   {args.process}")
-    print("=" * 60)
-
-    if args.algo == "all" or args.data == "all":
-        run_all()
+    if args.data == 'drybean' and args.algo == 'drybean':
+        run_drybean(args.process)
+    elif args.data == 'drybean' and args.algo in ['lr','svm','knn','xgb']:
+        run_drybean('preprocess')  # ensure data is clean
+        run_drybean_single(args.algo)
     else:
-        run_single(args.algo, args.data, args.process)
+        print("Use: python main.py --algo=drybean --data=drybean --process=analyze/preprocess/experiments")
+        print("Or:  python main.py --algo=lr/svm/knn/xgb --data=drybean --process=train")
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

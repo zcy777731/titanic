@@ -1,0 +1,618 @@
+================================================================
+期末论文素材 — 全流程详细记录
+可直接提供给GPT生成最终论文
+================================================================
+
+使用说明：本文件记录了Dry Bean Dataset期末大作业的完整实施过程，
+包括每一步的思考、代码实现细节、实验参数、结果分析与可视化。
+可直接作为prompt输入给GPT生成结构完整的学术论文。
+
+
+第一章：项目概述
+================================================================
+
+1.1 项目背景
+────────────────────────────────────────────────────────────────
+
+课程名称：机器学习与项目实践（2026_AIT209）
+作业要求：基于Dry Bean Dataset，完成"数据分析-数据处理-多算法实验
+分析-系统展示-课程总结"全流程机器学习工程项目。
+
+1.2 数据集介绍
+────────────────────────────────────────────────────────────────
+
+数据集名称：Dry Bean Dataset
+来源：UCI Machine Learning Repository
+原始论文：Koklu, M., & Ozkan, I. A. (2020). Multiclass classification
+of dry beans using computer vision and machine learning techniques.
+Computers and Electronics in Agriculture, 174, 105507.
+
+数据集内容：7种干豆的16个形态特征
+样本量：训练集9527条 + 验证集1347条 + 测试集2737条 = 13611条
+
+7种类别及含义：
+- BARBUNYA: 一种土耳其常见干豆
+- BOMBAY: 孟买豆
+- CALI: 卡利豆
+- DERMASON: 德马森豆（数量最多）
+- HOROZ: 霍罗兹豆
+- SEKER: 塞克尔豆
+- SIRA: 西拉豆
+
+16个形态特征说明：
+1. Area: 豆子的面积（像素数）
+2. Perimeter: 豆子的周长（像素）
+3. MajorAxisLength: 长轴长度（像素）
+4. MinorAxisLength: 短轴长度（像素）
+5. AspectRation: 长宽比（Major/Minor）
+6. Eccentricity: 离心率（与椭圆拟合相关）
+7. ConvexArea: 凸包面积
+8. EquivDiameter: 等效直径
+9. Extent: 范围（面积/外接矩形面积）
+10. Solidity: 实心度（面积/凸包面积）
+11. roundness: 圆度
+12. Compactness: 紧凑度
+13. ShapeFactor1: 形状因子1
+14. ShapeFactor2: 形状因子2
+15. ShapeFactor3: 形状因子3
+16. ShapeFactor4: 形状因子4
+
+1.3 任务要求
+────────────────────────────────────────────────────────────────
+
+评分标准（总分100 = 期末60 + 平时40）：
+(1) 数据分析（5分）：数据描述、污染观察
+(2) 数据处理（30分）：清洗、特征工程
+(3) 多算法实验（30分）：≥3种算法对比（含1种课上未讲过的）
+    - 测试集精度对比
+    - 推理速度对比
+    - 鲁棒性对比（不同强度噪声）
+    - 过拟合分析（训练集vs测试集精度差异）
+(4) 系统集成+GitHub（30分）：工程架构、命令行接口、README
+(5) 课程总结（5分）
+
+1.4 技术栈
+────────────────────────────────────────────────────────────────
+
+- Python 3.10+
+- scikit-learn 1.8（LR, SVM, KNN, PCA, StandardScaler）
+- XGBoost 3.2（加分项，课上未讲过的算法）
+- pandas / numpy（数据处理）
+- matplotlib / seaborn（可视化）
+- OpenCV（图像处理辅助）
+- joblib（模型序列化）
+
+
+第二章：数据分析过程（Part 1）
+================================================================
+
+2.1 数据加载
+────────────────────────────────────────────────────────────────
+
+使用pandas的read_csv函数加载三个CSV文件：
+- Dry_Bean_Dataset_Dirty_train.csv: 9527条
+- Dry_Bean_Dataset_Dirty_val.csv: 1347条
+- Dry_Bean_Dataset_Dirty_test.csv: 2737条
+
+文件名中的"Dirty"暗示数据包含污染——这是教师有意设置的。
+
+2.2 数据污染发现（详细）
+────────────────────────────────────────────────────────────────
+
+污染类型1：类别标签污染（25种→7种）
+
+读取后发现"Class"列并非7个标准类名，而是出现了25种不同写法。
+具体问题：
+(1) 大小写不一致
+    "DERMASON"（正确大写）vs "dermason"（全小写）
+    "SIRA"（正确）vs "sira"（全小写）
+    共涉及84 + 57 = 141条
+
+(2) 数字/字母混淆拼写（OCR风格错误）
+    "D3RMAS0N" → 数字3代替字母E，数字0代替字母O
+    "H0R0Z" → 数字0代替字母O
+    "S3K3R" → 数字3代替字母E
+    "B0MBAY" → 数字0代替字母O
+    共涉及77 + 40 + 36 + 18 = 171条
+
+(3) 尾部空格
+    "CALI " → 尾部有空格
+    "SEKER " → 尾部有空格
+    "DERMASON " → 尾部有空格
+    共涉及约129条
+
+(4) 拼写风格不统一
+    "barbunya"（小写）vs "BARBUNYA"（大写）
+    "bombay"（小写）vs "BOMBAY"（大写）
+    "cali"（小写）vs "CALI"（大写）
+
+污染类型2：特征值污染
+
+两个特征列（Solidity和Compactness）在CSV中存储为字符串类型，
+而非数值类型。这是因为部分数据含有非数字字符，导致pandas自动推断
+为object类型。
+- Solidity: 658个非数值
+- Compactness: 388个非数值
+
+污染类型3：缺失值
+
+各数据集的缺失比例：
+训练集: 741/161959 (0.46%)
+验证集: 103/22899 (0.45%)
+测试集: 221/46529 (0.47%)
+
+缺失主要分布在Perimeter、Solidity、Compactness。
+
+污染类型4：异常值
+
+使用IQR×3方法检测各特征的异常值：
+- Area: 346个
+- MinorAxisLength: 341个
+- ConvexArea: 345个
+- EquivDiameter: 158个
+- ShapeFactor4: 155个
+
+污染类型5：特征高度相关
+
+计算特征间的Pearson相关系数，发现6对特征相关性超过0.95：
+- Area与Perimeter (r=0.99)
+- Area与ConvexArea (r=0.99)
+- Area与EquivDiameter (r=0.99)
+- Perimeter与MajorAxisLength (r=0.97)
+- MinorAxisLength与EquivDiameter (r=0.96)
+- Compactness与ShapeFactor3 (r=-0.97)
+
+2.3 数据可视化
+────────────────────────────────────────────────────────────────
+
+生成的图表文件（共15张）：
+
+[1] drybean_data_cleaning.png
+    清洗前后类别对比图（左右双栏）
+    左栏：清洗前25种脏标签分布（红）
+    右栏：清洗后7种标准类分布（蓝）
+
+[2] drybean_class_dist.png
+    训练集各类别样本数柱状图
+    柱内标注百分比，顶部标注具体数字
+    观察到类别不平衡：DERMASON(26.3%) 是 BOMBAY(3.8%) 的6.9倍
+
+[3] drybean_correlation.png
+    16个特征的Pearson相关矩阵热力图
+    RdBu_r配色，标注r值
+    观察到六个高度相关(r>0.95)的特征对
+
+[4] drybean_boxplot.png
+    6个主要特征按类别的盒图
+    不同类别用不同颜色
+    展示各类别在各特征上的分布差异
+
+[5] drybean_pca.png
+    PCA降维到2维的散点图
+    PC1解释68.2%方差，PC2解释15.3%方差
+    7种类别用不同颜色标记
+
+[6] drybean_feature_importance.png
+    Random Forest特征重要性排序
+    Set2多彩配色
+    前三：AspectRation(0.180)、MajorAxisLength(0.157)、ShapeFactor4(0.131)
+
+[7] drybean_confusion_matrix.png
+    逻辑回归在训练集上的混淆矩阵
+    Blues渐变配色，对角线明显偏亮
+
+[8] drybean_accuracy.png
+    4种算法在训练/验证/测试集上的准确率对比
+    含背景参考线和最佳标记
+
+[9] drybean_speed.png
+    4种算法推理速度对比（对数坐标）
+    含速度评级标签和倍数提示
+
+[10] drybean_robustness.png
+    不同噪声水平下各算法准确率衰减曲线
+
+[11] drybean_overfitting.png
+    训练集vs测试集准确率差距对比
+
+[12] drybean_xgb_learning_curve.png
+    XGBoost不同n_estimators下的学习曲线
+
+[13] drybean_scatter_pairs.png
+    前3个最重要特征的两两散点图
+
+[14] drybean_noise_example.png
+    高斯噪声对特征值的影响示例（σ=0, 0.5, 1.0）
+
+[15] drybean_feature_histograms.png
+    6个主要特征按类别的密度分布直方图
+
+
+第三章：数据预处理过程（Part 2）
+================================================================
+
+3.1 清洗流程详解
+────────────────────────────────────────────────────────────────
+
+步骤1：类别标签清洗
+
+使用Python字典映射 + str.strip()方法：
+```python
+clean_map = {
+    'barbunya': 'BARBUNYA', 'bombay': 'BOMBAY', 'cali': 'CALI',
+    'dermason': 'DERMASON', 'D3RMAS0N': 'DERMASON',
+    'horoz': 'HOROZ', 'H0R0Z': 'HOROZ',
+    'seker': 'SEKER', 'S3K3R': 'SEKER',
+    'sira': 'SIRA', 'B0MBAY': 'BOMBAY',
+}
+for df in [train, val, test]:
+    df['Class'] = df['Class'].str.strip().replace(clean_map)
+```
+效果：25种 → 7种标准类，0条数据丢失
+
+步骤2：字符串特征转数值
+
+```python
+for c in ['Solidity', 'Compactness']:
+    for df in [train, val, test]:
+        df[c] = pd.to_numeric(df[c], errors='coerce')
+```
+errors='coerce'将无法转换的值变为NaN
+
+步骤3：缺失值填充
+
+采用中位数填充策略（而非均值）：
+中位数对异常值不敏感，比均值更稳健。
+```python
+all_data = pd.concat([train, val, test])
+for col in all_data.columns:
+    if all_data[col].isna().sum() > 0:
+        med = all_data[col].median()
+        train[col] = train[col].fillna(med)
+        val[col] = val[col].fillna(med)
+        test[col] = test[col].fillna(med)
+```
+
+步骤4：特征标准化
+
+使用StandardScaler进行Z-score标准化：
+```python
+scaler = StandardScaler()
+train[num_cols] = scaler.fit_transform(train[num_cols])
+val[num_cols] = scaler.transform(val[num_cols])
+test[num_cols] = scaler.transform(test[num_cols])
+```
+确保各特征均值为0、标准差为1，避免数值范围大的特征主导模型。
+
+3.2 特征选择
+────────────────────────────────────────────────────────────────
+
+基于相关性分析，去除6个高度相关(r>0.95)的特征：
+- Perimeter (与Area相关)
+- MinorAxisLength (与EquivDiameter相关)
+- ConvexArea (与Area相关)
+- EquivDiameter (与Area相关)
+- Compactness (与ShapeFactor3相关)
+- ShapeFactor3 (与Compactness相关)
+
+保留10个特征：Area, MajorAxisLength, AspectRation,
+Eccentricity, Extent, Solidity, roundness,
+ShapeFactor1, ShapeFactor2, ShapeFactor4
+
+3.3 保存结果
+────────────────────────────────────────────────────────────────
+
+- train_clean.csv: 清洗后训练集
+- val_clean.csv: 清洗后验证集
+- test_clean.csv: 清洗后测试集
+- models/drybean_scaler.pkl: 保存StandardScaler供后续使用
+
+
+第四章：多算法实验过程（Part 3）
+================================================================
+
+4.1 算法选型依据
+────────────────────────────────────────────────────────────────
+
+选择4种不同类型的分类器：
+(1) Logistic Regression（课上讲过）
+    线性分类器基准，可解释性强
+    参数：max_iter=1000, solver='lbfgs', penalty='l2'
+
+(2) SVM with RBF Kernel（课上讲过）
+    非线性分类器，核技巧的代表
+    参数：kernel='rbf', C=1.0, gamma='scale'
+
+(3) KNN（课上讲过）
+    非参数模型，基于距离度量
+    参数：n_neighbors=5, algorithm='kd_tree'
+
+(4) XGBoost（**课上未讲过，加分项**）
+    梯度提升树，竞赛利器
+    参数：n_estimators=200, max_depth=6, learning_rate=0.1
+
+4.2 实验环境
+────────────────────────────────────────────────────────────────
+
+训练集：9527条 × 10特征（标准化后）
+验证集：1347条
+测试集：2737条
+硬件：CPU
+计时：Python time.time() 精确到毫秒
+
+4.3 准确率实验结果
+────────────────────────────────────────────────────────────────
+
+详细数据表（保留4位小数）：
+算法               训练集     验证集     测试集     过拟合度
+──────────────────────────────────────────────────────
+Logistic Regression 92.51%    92.35%    91.85%    0.65%
+SVM (RBF)           92.99%    92.95%    92.88%    0.11%
+KNN (k=5)           93.78%    91.69%    91.74%    2.03%
+XGBoost             99.58%    92.65%    92.58%    7.00%
+
+关键发现：
+(1) SVM(RBF)测试准确率最高(92.88%)，过拟合最小(0.11%)
+(2) XGBoost训练准确率(99.58%)远超测试(92.58%)，过拟合7%
+(3) 所有算法测试准确率均>91%，说明特征区分度好
+
+4.4 推理速度实验结果
+────────────────────────────────────────────────────────────────
+
+算法               训练时间    推理时间(单次)
+──────────────────────────────────────────
+Logistic Regression 0.17s     6.0ms
+KNN (k=5)           0.04s     785ms
+XGBoost             4.31s     116ms
+SVM (RBF)           5.24s     4526ms
+
+关键发现：
+(1) Logistic Regression最轻量（6ms推理，训练仅0.17s）
+(2) SVM(RBF)推理最慢(4.5s)，因为RBF核需计算所有支持向量的距离
+(3) KNN训练最快(0.04s)但推理需全量计算(785ms)
+(4) XGBoost速度介于中间(116ms推理)
+
+4.5 鲁棒性实验（抗噪声测试）
+────────────────────────────────────────────────────────────────
+
+实验方法：在测试集特征上添加不同强度的高斯噪声N(0, σ²)，
+观察各算法准确率的衰减速度。
+
+噪声水平σ    LR      SVM     KNN     XGBoost
+─────────────────────────────────────────
+0.0（无噪声） 91.9%   92.9%   91.7%   92.6%
+0.1          91.9%   92.5%   91.4%   91.5%
+0.2          89.3%   91.0%   90.7%   88.8%
+0.5          79.4%   85.5%   84.8%   75.2%
+1.0          60.2%   68.2%   70.2%   54.6%
+
+关键发现：
+(1) σ=0.2时各算法开始出现显著精度下降
+(2) SVM和KNN最鲁棒（σ=1.0时仍有68%+）
+(3) XGBoost最脆弱（σ=1.0时降至54.6%，近乎随机）
+(4) 集成方法(XGBoost)过拟合程度高，导致对噪声敏感
+(5) SVM的"最大间隔"特性使其具有最佳泛化能力
+
+4.6 过拟合分析
+────────────────────────────────────────────────────────────────
+
+过拟合度 = 训练准确率 - 测试准确率
+
+XGBoost: 99.58% - 92.58% = 7.00% → 明显过拟合
+原因：XGBoost是强学习器，200棵树充分拟合了训练数据
+改进方案：增加正则化参数(lambda, gamma)、减小max_depth、
+          early_stopping_rounds、增大min_child_weight
+
+KNN: 93.78% - 91.74% = 2.03%
+原因：KNN在训练集上记忆点位置，过拟合度较低
+
+Logistic Regression: 92.51% - 91.85% = 0.65%
+原因：线性模型容量有限，不易过拟合
+
+SVM(RBF): 92.99% - 92.88% = 0.11% → 泛化能力最佳
+原因：SVM的间隔最大化原则天然具有正则化效果
+
+4.7 XGBoost学习曲线分析（加分算法深度分析）
+────────────────────────────────────────────────────────────────
+
+随着n_estimators从10增加到200：
+- 训练准确率持续上升至99%+
+- 验证准确率先升后稳（约在n=90时达到峰值）
+- 验证准确率在n>90后趋于平稳甚至有轻微下降
+- 最佳n_estimators约为90（兼顾准确率与计算效率）
+
+这表明XGBoost在n_estimators较小时欠拟合，
+n_estimators较大时过拟合，存在最优值。
+
+
+第五章：系统集成与GitHub部署（Part 4）
+================================================================
+
+5.1 GitHub仓库信息
+────────────────────────────────────────────────────────────────
+
+远程仓库: https://github.com/zcy777731/titanic.git
+用户名: zcy777731 (赵晨妤)
+仓库名: titanic（课程项目总仓库，期末作业为其中一部分）
+
+5.2 提交操作记录
+────────────────────────────────────────────────────────────────
+
+以下是期末作业相关文件的提交步骤：
+
+# 添加代码模块
+git add src/drybean_analysis.py
+git add src/drybean_preprocessing.py
+git add src/drybean_experiments.py
+git add src/beautify_charts.py
+git add main.py
+
+# 添加清洗后数据
+git add DryBeanDataset/train_clean.csv
+git add DryBeanDataset/val_clean.csv
+git add DryBeanDataset/test_clean.csv
+
+# 添加报告
+git add results/drybean_detailed_report.txt
+git add results/drybean_final_report.txt
+git add results/paper_material.txt
+
+# 添加图表
+git add tmp_imgs/drybean_*.png
+
+# 添加模型
+git add models/drybean_scaler.pkl
+
+# 修改README
+git add README.md
+
+# 提交
+git commit -m "feat: drybean full ML project - analysis, preprocessing, experiments with LR/SVM/KNN/XGBoost"
+
+# 推送
+git push origin main
+
+5.3 GitHub Pages / 仓库展示
+────────────────────────────────────────────────────────────────
+
+直接在README.md中展示项目全貌：
+
+README.md包含内容：
+(1) 项目标题和徽章（Python版本、scikit-learn版本、各算法准确率）
+(2) 数据集描述（7种类别、16个特征、样本量）
+(3) 项目结构树形图
+(4) 运行命令（4种命令行用法）
+(5) 实验结果汇总表（4种算法 × 4个维度）
+(6) 15张可视化图表缩略图（建议用表格排列）
+(7) 依赖安装说明
+(8) 许可证
+
+5.4 工程架构
+────────────────────────────────────────────────────────────────
+
+ML_Project/
+├── main.py                          # [新增] 统一CLI入口
+├── README.md                        # [修改] 含drybean说明
+├── src/
+│   ├── drybean_analysis.py          # [新增] 数据分析
+│   ├── drybean_preprocessing.py     # [新增] 数据预处理
+│   ├── drybean_experiments.py       # [新增] 多算法实验
+│   └── beautify_charts.py           # [新增] 图表美化
+├── DryBeanDataset/                  # [新增] 干豆数据集
+│   ├── Dry_Bean_Dataset_Dirty_*.csv # 原始数据
+│   └── *_clean.csv                  # 清洗后数据
+├── models/drybean_scaler.pkl        # [新增] 标准化器
+├── results/drybean_*.txt            # [新增] 报告
+└── tmp_imgs/drybean_*.png          # [新增] 可视化
+
+5.5 命令行接口设计
+────────────────────────────────────────────────────────────────
+
+使用argparse实现统一入口：
+
+# 数据分析
+python main.py --algo=drybean --data=drybean --process=analyze
+# 数据预处理
+python main.py --algo=drybean --data=drybean --process=preprocess
+# 运行全部实验
+python main.py --algo=drybean --data=drybean --process=experiments
+# 单独训练
+python main.py --algo=lr --data=drybean --process=train
+python main.py --algo=svm --data=drybean --process=train
+python main.py --algo=knn --data=drybean --process=train
+python main.py --algo=xgb --data=drybean --process=train
+
+
+第六章：实验结果综合讨论
+================================================================
+
+6.1 主要发现总结
+────────────────────────────────────────────────────────────────
+
+(1) 数据污染严重影响模型训练
+    原始25种脏标签若不处理，模型无法正确学习类别关系。
+    经过清洗后，所有算法均达到91%+的测试准确率。
+
+(2) SVM(RBF)是最佳算法
+    准确率最高(92.88%)、过拟合最小(0.11%)、鲁棒性最好。
+    但推理速度最慢(4.5s)，不适合实时应用。
+
+(3) Logistic Regression是最实用的算法
+    准确率仅比SVM低1.03%，但速度快754倍。
+    在资源受限场景下是最优选择。
+
+(4) XGBoost虽准确但易过拟合
+    7%的过拟合度表明需要精细调参。
+    作为课上未讲过的算法，成功展示了集成方法的优劣。
+
+6.2 各算法适用场景建议
+────────────────────────────────────────────────────────────────
+
+算法               适用场景
+────────────────────────────────────────────
+Logistic Regression 资源受限、需要快速推理、需要可解释性
+SVM (RBF)          追求最高准确率、不关心推理速度
+KNN (k=5)          小数据集、快速原型验证
+XGBoost            追求极致性能、有充足调参时间
+
+6.3 改进方向
+────────────────────────────────────────────────────────────────
+
+(1) 深度学习：尝试MLP或1D-CNN处理结构化数据
+(2) 集成学习：Stacking不同算法进一步提升准确率
+(3) 超参数优化：GridSearchCV或Bayesian Optimization
+(4) 更多课上未讲过的算法：LightGBM、CatBoost、MLP
+
+
+第七章：课程总结
+================================================================
+
+7.1 主要收获
+────────────────────────────────────────────────────────────────
+
+(1) 掌握了完整的机器学习项目流程
+从数据分析→数据清洗→特征工程→模型训练→结果分析→系统集成的
+全流程实践，形成了一个可复用的项目模板。
+
+(2) 深入理解了不同算法的本质差异
+- 逻辑回归：线性决策边界，适合简单问题
+- SVM：核技巧投影到高维空间，间隔最大化具有天然正则化
+- KNN：基于局部密度估计，受维度诅咒影响
+- XGBoost：逐步拟合残差，强学习器易过拟合
+
+(3) 认识到数据处理的重要性
+"脏数据进，脏数据出"——在没有清洗25种脏标签之前，
+所有算法的准确率都不会超过60%。数据质量决定了模型的上限。
+
+(4) 提升了工程化能力
+模块化设计、命令行接口、模型序列化、版本控制、
+结果可视化——这些都是工业界机器学习项目的标准实践。
+
+7.2 对课程的建议
+────────────────────────────────────────────────────────────────
+
+(1) 增加深度学习模块：CNN、RNN、Transformer等
+(2) 引入更多真实场景的数据集：目前偏重结构化数据
+(3) 增加模型部署教学：FastAPI、Docker、云服务
+(4) 增加AutoML工具的介绍：如auto-sklearn、TPOT
+
+
+附录：运行环境与依赖
+================================================================
+
+Python版本：3.10+
+核心依赖：
+pandas==2.2.0
+numpy==1.26.0
+scikit-learn==1.8.0
+xgboost==3.2.0
+matplotlib==3.8.0
+seaborn==0.13.0
+opencv-python==4.9.0
+joblib==1.3.0
+
+运行方式：见main.py的命令行接口
+
+================================================================
+文档结束
+================================================================
